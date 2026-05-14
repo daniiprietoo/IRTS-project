@@ -1,0 +1,38 @@
+// ============================================================
+//  factory1.mas2j — Assembly Factory
+//  Jason 3.3 + CArtAgO 3.x
+//
+//  Compile the artifact first:
+//    javac -cp jason-3.3.jar:cartago-3.x.jar \
+//          src/env/factory/FactoryArtifact.java \
+//          -d bin
+//
+//  Run:
+//    jason factory1.mas2j
+//
+//  The CArtAgO workspace "main" is created automatically.
+//  The artifact factory_env is created by roboticarmagent
+//  during its !start plan; all other agents look it up.
+// ============================================================
+MAS factory1 {
+
+    //infrastructure: Centralised
+
+    // CArtAgO is activated by this environment declaration.
+    // "main" is the name of the default workspace.
+    environment: jaca.CartagoEnvironment//cartago.CartagoEnvironment("main")
+
+    agents:
+        // roboticarmagent creates the shared factory artifact
+        // so it must start first (or retry via !focus_factory).
+        roboticarmagent agentArchClass jaca.CAgentArch;
+        weldingagent agentArchClass jaca.CAgentArch;
+        movingagent agentArchClass jaca.CAgentArch;
+        assemblyareaagent agentArchClass jaca.CAgentArch;
+        holdingagent #6 agentArchClass jaca.CAgentArch;
+        binagent     #6 agentArchClass jaca.CAgentArch;
+
+    // Source directories for agent files and Java artifact classes
+    aslSourcePath: "src/agt";
+    //classpath:     "bin";
+}

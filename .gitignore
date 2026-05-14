@@ -1,0 +1,70 @@
+# Build directories
+build/
+target/
+dist/
+.gradle/
+
+# Compiled class files
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.classpath
+.c9/
+
+# Dependencies
+lib/**/*.jar
+node_modules/
+.m2/
+
+# Logs
+*.log
+logs/
+log/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+.cache/
+
+# Gradle
+.gradle/
+gradle-app.setting
+gradlew
+gradlew.bat
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Environment
+.env
+.env.local
+*.properties.local
+
+# Jason/CArtAgO specific
+*.asl~
+*.mas2j~
