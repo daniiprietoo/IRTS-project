@@ -29,8 +29,8 @@ binfull(6) :- bin_6(true).
 !start.
 
 // Reactive: bin became empty — refill it
--binfull(N) : binnumber(N) & factory_art_id(_)
-    <- !refill.
+// -binfull(N) : binnumber(N) & factory_art_id(_)
+//     <- !refill.
 
 +!start : true
 <- !focus_factory;
@@ -40,11 +40,22 @@ binfull(6) :- bin_6(true).
    .print("Bin agent ", N, " started.");
    !refill.
 
-+!refill : binnumber(N) & timer(T)
++!refill : not binnumber(_)
+<- .print("Bin agent: no bin number assigned, cannot refill.");
+   .wait(1000);
+   !refill.
+
+// Reactive: bin became full — wait for it to be emptied
++!refill : binnumber(N) & binfull(N)
+   <- .wait(1000);
+      !refill.
+
++!refill : binnumber(N) & timer(T) & not binfull(N)
 <- // math.random used as arithmetic expression (not as action)
    // to avoid CArtAgO intercepting it as an artifact operation.
    WaitTime = math.random * T;
    .print("Bin agent ", N, " waiting ", WaitTime div 1000, " s for new parts...");
    .wait(WaitTime);
    .print("Bin agent ", N, " has received new parts.");
-   refill_bin(N).        // CArtAgO operation on factory_env
+   refill_bin(N);        // CArtAgO operation on factory_env
+   !refill.

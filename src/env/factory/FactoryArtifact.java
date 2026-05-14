@@ -47,17 +47,15 @@ public class FactoryArtifact extends Artifact {
     public static final int[]   MOVER_BASE   = {  300,  70 };
     public static final int[][] BIN_POS      =
         { {270,538},{270,568},{270,598},{270,628},{270,658},{270,688} };
-    // public static final int[][] JOINT_POS    =
-    //     { {914,194},{501,197},{534,460},{501,215},{358,459} };
-
     public static final int[][] JOINT_POS    =
-        {
-            {914,194},    // Joint 1 — Area 1 (upper-right)
-            {501,197},    // Joint 2 — Area 1 (upper-center)
-            {534,260},    // Joint 3 — Area 1 (upper-center)
-            {400,400},    // Joint 4 — Area 2 (lower-left)
-            {550,400}     // Joint 5 — Area 2 (lower-right)
+        { 
+            {914,194}, // Joint 1 — Area 1 (upper-right)
+            {501,197}, // Joint 2 — Area 1 (upper-center)
+            {501,215}, // Joint 4 — Area 2 (lower-left)
+            {534,460}, // Joint 3 — Area 1 (upper-center)
+            {358,459}  // Joint 5 — Area 2 (lower-right)
         };
+
     public static final int[][] PART_POS     =
         { {917,198,344},{705,194,90},{727,328,55},
           {515,327,352},{428,335,30},{445,458,90} };
@@ -372,7 +370,9 @@ public class FactoryArtifact extends Artifact {
 
         // Assembly areas
         void drawAreas(Graphics2D g2) {
-            int[][] areas = { {350,150,350,350}, {705,150,250,350} };
+            // Area 1 -> upper, joints 1, 2, 3
+            // Area 2 -> lower, joints 4, 5 
+            int[][] areas = { {300,150,650, 200}, {300, 350, 650, 150} };
             for (int i = 0; i < AREAS; i++) {
                 int[] a = areas[i];
                 g2.setColor(m.lockArea[i] ? FactoryView.AREA_LOCK : FactoryView.AREA_FREE);
@@ -385,6 +385,11 @@ public class FactoryArtifact extends Artifact {
                 g2.drawString("AREA " + (i+1) +
                     (m.lockArea[i] ? "  [LOCKED]" : ""), a[0]+6, a[1]+14);
             }
+        }
+
+        static int getJointArea(int jointNum) {
+            if (jointNum < 1 || jointNum > JOINTS) throw new IllegalArgumentException("Invalid joint number");
+            return JOINT_AREA[jointNum-1];
         }
 
         // Bin status strip
@@ -430,6 +435,11 @@ public class FactoryArtifact extends Artifact {
                     g2.setColor(FactoryView.BG);
                     g2.setStroke(new BasicStroke(1f));
                     g2.drawOval(JOINT_POS[i][0]+dx-9, JOINT_POS[i][1]+dy-9, 18, 18);
+                    g2.setFont(new Font("SansSerif", Font.PLAIN, 9));
+                    g2.setColor(FactoryView.TEXT_DIM);
+                    // Label joints according to their position not their index
+                    g2.drawString("J" + (i+1) + " (A" + getJointArea(i+1) + ")",
+                        JOINT_POS[i][0]+dx+12, JOINT_POS[i][1]+dy+4);
                 }
             }
         }
