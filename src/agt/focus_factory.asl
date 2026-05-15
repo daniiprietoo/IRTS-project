@@ -13,17 +13,15 @@
 // ============================================================
 
 +!focus_factory : not factory_art_id(_)
-<- .print("[", .my_name, "] Looking up factory_env...");
-   lookupArtifact("factory_env", ArtId);
-   focus(ArtId);
-   +factory_art_id(ArtId);
-   .print("[", .my_name, "] Focused on factory_env OK.").
+<- .print("[", .my_name, "] Looking up assembly_board...");
+   lookupArtifact("assembly_board", BoardId);
+   focus(BoardId);
+   +factory_art_id(BoardId); // Mantenemos el nombre antiguo para no romper tus guards
+   .print("[", .my_name, "] Focus on assembly_board OK.").
 
-// Already focused — nothing to do
 +!focus_factory : factory_art_id(_).
 
-// Failure plan: artifact not yet created — wait and retry
 -!focus_factory : true
-<- .print("[", .my_name, "] factory_env not ready, retrying...");
+<- .print("[", .my_name, "] assembly_board not ready, retrying...");
    .wait(500);
    !focus_factory.

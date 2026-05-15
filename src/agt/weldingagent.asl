@@ -36,6 +36,9 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 
 +!main : true
 <- !focus_factory;
+   makeArtifact("welder_tool", "factory.WelderArtifact", [], WelderId);
+   focus(WelderId);
+   +welder_art_id(WelderId);
    .print("Welding robot: waiting for new parts");
    !weldParts.
 

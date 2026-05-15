@@ -25,14 +25,15 @@ waitingposition(270, 613, 90).
 
 // ── Startup: create the artifact and focus on it ──────────────
 +!start : true
-<- // Create the shared factory artifact in the "main" workspace.
+<-  // Create the shared factory artifact in the "main" workspace.
    // All other agents will look it up by name.
-   makeArtifact("factory_env",
-                "factory.FactoryArtifact",
-                [],
-                ArtId);
-   focus(ArtId);
-   +factory_art_id(ArtId);
+   makeArtifact("assembly_board", "factory.AssemblyBoardArtifact", [], BoardId);
+   focus(BoardId);
+   +factory_art_id(BoardId);
+   makeArtifact("arm_tool", "factory.ArmArtifact", [], ArmId);
+   focus(ArmId);
+   +arm_art_id(ArmId);
+   
    .print("Robotic arm agent: factory artifact created and focused.");
    !positionParts.
 
