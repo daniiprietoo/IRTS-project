@@ -19,7 +19,10 @@ weldingCompleted   :- joints(N) & jointDone(N).
 !start.
 
 +!start : true
-<- !focus_factory;
+<- !focus_factory;   
+   makeArtifact("mover_tool", "factory.MoverArtifact", [], MoverId);
+   focus(MoverId);
+   +mover_art_id(MoverId);
    .print("Moving robot: waiting for finished frame");
    !removeFrame.
 
