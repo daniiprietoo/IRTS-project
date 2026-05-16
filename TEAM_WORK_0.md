@@ -97,4 +97,27 @@ With this modification, every time a part is consumed from the bin, the agent wi
 
 ## 3. How to obtain different artifacts for each agent
 
+The main objective of this modification is to transition the system environment from a single artifact `FactoryArtifact` into specialized artifacts for each agent.
 
+Intead of having all agents focus a single artifact that handles all the logic, we splitted the responsibilities so that each agent only interacts with the its own artifact.
+
+The original `FactoryArtifact` was splitted into the following artifacts:
+
+1. **`ArmArtifact.java`**: For to the `roboticarmagent`. It has the `pick_part`, `release_part`, and arm operations. It exposes the properties specific to the gripper position and content.
+2. **`WelderArtifact.java`**: For to the `weldingagent`. It handles the `weld` and welder movement, keeping track of the welder's position.
+3. **`MoverArtifact.java`**: For to the `movingagent`. It manages the movement of the finished frames and shares the mover's position.
+4. **`AssemblyBoardArtifact.java`**: Acts as a shared environment artifact. It manages the assembly areas, holding states, and bin capacities. All agents will still interact with this shared space to coordinate locks and part placements.
+
+To ensure the the agents interact with the correct artifacts, the agents initialization was updated. So instead of relying on the `lookupArtifact("factory_env", ArtId)`, each agent looks up its own specific artifact during the start, for instance the `weldingagent` looks up the `WelderArtifact`:
+
+```prolog
++!main : true
+<- !focus_factory;
+   makeArtifact("welder_tool", "factory.WelderArtifact", [], WelderId);
+   focus(WelderId);
+   +welder_art_id(WelderId);
+   .print("Welding robot: waiting for new parts");
+   !weldParts.
+```
+
+This leverage the separation of concerns that CArtAgO  and Java provides. The system is more modular, and easier to maintain.
