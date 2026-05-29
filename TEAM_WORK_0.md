@@ -1,8 +1,8 @@
-# TEAM WORK 0
+# TEAM WORK 0 - Team 4 (UDC)
 
-Alejandro Silva
-Fernando Baña
-Daniel Prieto
+- Alejandro Silva
+- Fernando Baña
+- Daniel Prieto
 
 ## 1. Modification of the work areas
 
@@ -26,7 +26,7 @@ The main change is in the `JOINT_POS` array, where we have changed the positions
 
 In order to connect the logic from the welding agent to the new areas, we modified the `weldingagent.asl` in various places to use the new are mapping. We introduced new beliefs to keep track of which area is needed for each joint and the locked area. Reflecting the new distribution of joints in areas defined in the `FactoryArtifact`.
 
-```asl
+```prolog
 jointInArea(1, 1). 
 jointInArea(2, 1).
 jointInArea(3, 1).
