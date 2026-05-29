@@ -11,12 +11,8 @@
 
 timer(25000).
 
-binnumber(1, binagent1).
-binnumber(2, binagent2).
-binnumber(3, binagent3).
-binnumber(4, binagent4).
-binnumber(5, binagent5).
-binnumber(6, binagent6).
+binnumber(5, binagent1).
+binnumber(6, binagent2).
 
 // binfull(N) derived from CArtAgO observable properties bin_1..bin_6
 binfull(1) :- bin_1(true).

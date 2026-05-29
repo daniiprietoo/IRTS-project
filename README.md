@@ -1,5 +1,10 @@
 # Assembly Factory — Jason 3.3 + CArtAgO
 
+## Questions
+
+- [ ] Impossible for humans to meet quotas, factory is too slow.
+
+
 Modernised simulation of an assembly robot factory using
 Jason 3.3 as the BDI runtime and CArtAgO 3.x as the
 environment / artifact framework.

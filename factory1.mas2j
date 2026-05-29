@@ -30,7 +30,11 @@ MAS factory1 {
         movingagent agentArchClass jaca.CAgentArch;
         assemblyareaagent agentArchClass jaca.CAgentArch;
         holdingagent #6 agentArchClass jaca.CAgentArch;
-        binagent     #6 agentArchClass jaca.CAgentArch;
+        bob agentArchClass jaca.CAgentArch;
+        alice agentArchClass jaca.CAgentArch;
+        tom agentArchClass jaca.CAgentArch;
+        mary agentArchClass jaca.CAgentArch;
+        robotbinagent     #2 agentArchClass jaca.CAgentArch;
 
     // Source directories for agent files and Java artifact classes
     aslSourcePath: "src/agt";
