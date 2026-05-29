@@ -96,6 +96,7 @@ class Canvas extends JComponent {
         drawAreas(g2);
         drawBins(g2);
         drawHolders(g2);
+        drawJointsUnwelded(g2);
         drawJoints(g2, 0, 0);
         drawArm(g2);
         drawWelder(g2);
@@ -125,6 +126,29 @@ class Canvas extends JComponent {
     static int getJointArea(int jointNum) {
         if (jointNum < 1 || jointNum > JOINTS) throw new IllegalArgumentException("Invalid joint number");
         return JOINT_AREA[jointNum-1];
+    }
+
+    void drawJointsUnwelded(Graphics2D g2) {
+        int[][] joints    =
+            { 
+                {914,194}, // Joint 1 — Area 1 (upper-right)
+                {501,197}, // Joint 2 — Area 1 (upper-center)
+                {501,215}, // Joint 4 — Area 2 (lower-left)
+                {534,460}, // Joint 3 — Area 1 (upper-center)
+                {358,459}  // Joint 5 — Area 2 (lower-right)
+            };
+
+        for (int i = 0; i < JOINTS; i++) {
+            g2.setColor(m.joint[i] ? FactoryView.COL_JOINT : FactoryView.COL_JOINT.darker());
+            g2.fillOval(joints[i][0]-10, joints[i][1]-10, 20, 20);
+            g2.setColor(FactoryView.BG);
+            g2.setStroke(new BasicStroke(1f));
+            g2.drawOval(joints[i][0]-10, joints[i][1]-10, 20, 20);
+            g2.setFont(new Font("SansSerif", Font.PLAIN, 9));
+            g2.setColor(FactoryView.TEXT_DIM);
+            g2.drawString("J" + (i+1),
+                joints[i][0]+12, joints[i][1]+4);
+        }
     }
 
     // Bin status strip

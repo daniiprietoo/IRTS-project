@@ -29,6 +29,9 @@ jointInArea(3, 1).
 jointInArea(4, 2).
 jointInArea(5, 2).
 
+joint_needs_full_lock(4).
+joint_needs_full_lock(5).
+
 holdersReleased(N) :- not holding(N) & (N = 1 | holdersReleased(N-1)).
 holdersReleased    :- holders(N) & holdersReleased(N).
 
@@ -45,23 +48,52 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 +!weldParts : joint(_) & holdersReleased
 <- !forgetJoints; !weldParts.
 
-// +!weldParts : jointPartsInPlace(1) & not joint(1) & not lockedArea(2)
-// <- .print("Welding robot: requesting area 2.");
-//    .my_name(Agent);
-//    .send(assemblyareaagent, achieve, lockAreaFor(Agent, 2));
-//    .send(assemblyareaagent, achieve, unlockAreaFor(Agent, 1));
-//    .wait(200);
-//    !weldParts.
 
-+!weldParts : jointPartsInPlace(Joint) & not joint(Joint) & jointInArea(Joint, A) & not lockedArea(A) 
+// Request full lock (A1 and A2) for J4 and J5 if both are not acquired
++!weldParts : jointPartsInPlace(Joint) & not joint(Joint)
+            & joint_needs_full_lock(Joint)
+              & (not lockedArea(1) & not lockedArea(2))
+   <- .print("Welding robot: requesting FULL lock (areas 1 & 2) for joint ", Joint, ".");
+      .my_name(Agent);
+      .send(assemblyareaagent, achieve, fullAreaLockFor(Agent));
+      .wait(1000);
+      !weldParts.
+
+// Request lock (A1) for J4 and J5 if A2 acquired 
++!weldParts : jointPartsInPlace(Joint) & not joint(Joint)
+            & joint_needs_full_lock(Joint)
+              & lockedArea(2) & not lockedArea(1)
+   <- .print("Welding robot: requesting lock (area 1) for joint ", Joint, " (area 2 already locked).");
+      .my_name(Agent);
+      .send(assemblyareaagent, achieve, lockAreaFor(Agent, 1));
+      .wait(1000);
+      !weldParts.
+
+// Request lock (A2) for J4 and J5 if A1 acquired
++!weldParts : jointPartsInPlace(Joint) & not joint(Joint)
+            & joint_needs_full_lock(Joint)
+              & lockedArea(1) & not lockedArea(2)
+   <- .print("Welding robot: requesting lock (area 2) for joint ", Joint, " (area 1 already locked).");
+      .my_name(Agent);
+      .send(assemblyareaagent, achieve, lockAreaFor(Agent, 2));
+      .wait(1000);
+      !weldParts.
+
++!weldParts : jointPartsInPlace(Joint) & not joint(Joint)
+              & jointInArea(Joint, A) & not joint_needs_full_lock(Joint)
+              & not lockedArea(A)
    <- .print("Welding robot: requesting area ", A, " for joint ", Joint, ".");
       .my_name(Agent);
       .send(assemblyareaagent, achieve, lockAreaFor(Agent, A));
       .wait(1000);
       !weldParts.
 
-+!weldParts : jointPartsInPlace(Joint) & not joint(Joint) & jointInArea(Joint, A) & lockedArea(A)
-   <- .print("Welding robot: welding joint ", Joint, " in area ", A, ".");
+
+// Execute weld with FULL lock
++!weldParts : jointPartsInPlace(Joint) & not joint(Joint)
+              & joint_needs_full_lock(Joint)
+              & lockedArea(1) & lockedArea(2)
+   <- .print("Welding robot: welding joint ", Joint, " with FULL lock.");
       .drop_intention(parkArm);
       ?jointPos(Joint, X, Y);
       !moveTo(X, Y);
@@ -71,26 +103,19 @@ holdersReleased    :- holders(N) & holdersReleased(N).
       !!parkArm;
       !weldParts.
 
-
-// +!weldParts : (Joint = 1 & jointPartsInPlace(Joint) & not joint(Joint) & lockedArea(2)) |
-//               (Joint > 1 & jointPartsInPlace(Joint) & not joint(Joint) & lockedArea(1) & lockedArea(2))
-// <- .print("Welding robot: welding joint ", Joint);
-//    .drop_intention(parkArm);
-//    ?jointPos(Joint, X, Y);
-//    !moveTo(X, Y);
-//    weld;                           // CArtAgO operation
-//    +joint(Joint);
-//    .broadcast(tell, joint(Joint));
-//    !!parkArm;
-//    !weldParts.
-
-// +!weldParts : Joint > 1 & jointPartsInPlace(Joint) & not joint(Joint)
-//             & (not lockedArea(1) | not lockedArea(2))
-// <- .print("Welding robot: requesting areas 1 and 2.");
-//    .my_name(Agent);
-//    .send(assemblyareaagent, achieve, fullAreaLockFor(Agent));
-//    .wait(200);
-//    !weldParts.
+// Execute weld with PARTIAL lock
++!weldParts : jointPartsInPlace(Joint) & not joint(Joint)
+              & jointInArea(Joint, A) & not joint_needs_full_lock(Joint)
+              & lockedArea(A)
+   <- .print("Welding robot: welding joint ", Joint, " in area ", A, ".");
+      .drop_intention(parkArm);
+      ?jointPos(Joint, X, Y);
+      !moveTo(X, Y);
+      weld;                           // CArtAgO operation
+      +joint(Joint);
+      .broadcast(tell, joint(Joint));
+      !!parkArm;
+      !weldParts.
 
 +!weldParts : true
 <- .wait(200);
@@ -115,6 +140,17 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 <- !moveTo(X, Y); !parkArm.
 
 // Bug fix: bind X,Y before moveTo (were unbound in Jason 2.x version)
+// Park and release FULL lock
++!parkArm : lockedArea(1) & lockedArea(2)
+<- ?waitingposition(X, Y);
+   !moveTo(X, Y);
+   .print("Welding arm: releasing FULL lock (areas 1 & 2)");
+   .my_name(Agent);
+   .send(assemblyareaagent, achieve, fullAreaUnlockFor(Agent));
+   .wait(200);
+   !parkArm.
+
+// Park and release PARTIAL lock
 +!parkArm : lockedArea(Area)
 <- ?waitingposition(X, Y);
    !moveTo(X, Y);
