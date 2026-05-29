@@ -13,8 +13,8 @@ binfull(5) :- bin_5(true).
 binfull(6) :- bin_6(true).
 
 // define explicit bins that this agent can work on, so jason's logic works properly
-valid_bin(1). valid_bin(2). valid_bin(3). 
-valid_bin(4). valid_bin(5). valid_bin(6).
+valid_bin(5). valid_bin(6).
+valid_bin(1). valid_bin(2). valid_bin(3). valid_bin(4). 
 
 !start.
 
