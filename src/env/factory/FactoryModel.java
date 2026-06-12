@@ -47,7 +47,7 @@ import java.util.Arrays;
         boolean[] lockArea = new boolean[AREAS];
 
         int[] gripperPosition = { 270, 613 };
-        int[] welderPosition  = { 1000, 470 };
+        int[][] welderPositions = { {1000, 470}, {1060, 470} };
         int[] moverPosition   = { 500, 70 };
 
     private FactoryModel() {
@@ -87,27 +87,31 @@ import java.util.Arrays;
             else if (ag.equals("movingagent")) { moving = false; Arrays.fill(joint, false); }
         }
 
-        synchronized void weld() {
-            for (int i = 0; i < JOINTS; i++) {
-                if (welderPosition[0] == JOINT_POS[i][0]
-                        && welderPosition[1] == JOINT_POS[i][1]) {
-                    welding = true;
-                    try { Thread.sleep(5000); }
-                    catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-                    joint[i] = true;
-                    welding  = false;
-                }
+    synchronized void weld(String ag) {
+        int index = ag.equals("weldingagent1") ? 0 : 1;
+        for (int i = 0; i < JOINTS; i++) {
+            if (welderPositions[index][0] == JOINT_POS[i][0]
+                    && welderPositions[index][1] == JOINT_POS[i][1]) {
+                welding = true;
+                try { Thread.sleep(5000); }
+                catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                joint[i] = true;
+                welding  = false;
             }
         }
+    }
 
         synchronized void moveTowards(String ag, int tx, int ty, int ta) {
             if (ag.equals("roboticarmagent")) {
                 gripperPosition[0] = step(gripperPosition[0], tx);
                 gripperPosition[1] = step(gripperPosition[1], ty);
                 gripperAngle       = stepAngle(gripperAngle, ta);
-            } else if (ag.equals("weldingagent")) {
-                welderPosition[0] = step(welderPosition[0], tx);
-                welderPosition[1] = step(welderPosition[1], ty);
+            } else if (ag.equals("weldingagent1")) {
+                welderPositions[0][0] = step(welderPositions[0][0], tx);
+                welderPositions[0][1] = step(welderPositions[0][1], ty);
+            } else if (ag.equals("weldingagent2")) {
+                welderPositions[1][0] = step(welderPositions[1][0], tx);
+                welderPositions[1][1] = step(welderPositions[1][1], ty);
             } else if (ag.equals("movingagent")) {
                 moverPosition[0] = step(moverPosition[0], tx);
                 moverPosition[1] = step(moverPosition[1], ty);

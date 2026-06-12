@@ -11,6 +11,8 @@
 
 waitingposition(1000, 470).
 
+welder(X, Y) :- welder_x(X) & welder_y(Y).
+
 // Soft-goal retry for welder percept
 +?welder(X, Y) : true
   <- ?welder(X, Y).
@@ -39,7 +41,8 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 
 +!main : true
 <- !focus_factory;
-   makeArtifact("welder_tool", "factory.WelderArtifact", [], WelderId);
+   .my_name(Agent);
+   makeArtifact(Agent, "factory.WelderArtifact", [], WelderId);
    focus(WelderId);
    +welder_art_id(WelderId);
    .print("Welding robot: waiting for new parts");
@@ -89,7 +92,7 @@ holdersReleased    :- holders(N) & holdersReleased(N).
       !weldParts.
 
 
-// Execute weld with FULL lock
+// Execute weld with FULL lock (added agent name)
 +!weldParts : jointPartsInPlace(Joint) & not joint(Joint)
               & joint_needs_full_lock(Joint)
               & lockedArea(1) & lockedArea(2)
@@ -97,13 +100,13 @@ holdersReleased    :- holders(N) & holdersReleased(N).
       .drop_intention(parkArm);
       ?jointPos(Joint, X, Y);
       !moveTo(X, Y);
-      weld;                           // CArtAgO operation
+      weld(.my_name); // CArtAgO operation passing dynamic agent name
       +joint(Joint);
       .broadcast(tell, joint(Joint));
       !!parkArm;
       !weldParts.
 
-// Execute weld with PARTIAL lock
+// Execute weld with PARTIAL lock (added agent name)
 +!weldParts : jointPartsInPlace(Joint) & not joint(Joint)
               & jointInArea(Joint, A) & not joint_needs_full_lock(Joint)
               & lockedArea(A)
@@ -111,7 +114,7 @@ holdersReleased    :- holders(N) & holdersReleased(N).
       .drop_intention(parkArm);
       ?jointPos(Joint, X, Y);
       !moveTo(X, Y);
-      weld;                           // CArtAgO operation
+      weld(.my_name); // CArtAgO operation passing dynamic agent name
       +joint(Joint);
       .broadcast(tell, joint(Joint));
       !!parkArm;
@@ -128,9 +131,9 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 
 +!forgetJoints.
 
-// Movement
+// Movement (added agent name)
 +!moveTo(X, Y) : not welder(X, Y)
-  <- move_towards("weldingagent", X, Y, 0);
+  <- move_towards(.my_name, X, Y, 0);
      !moveTo(X, Y).
 
 +!moveTo(X, Y) : welder(X, Y).

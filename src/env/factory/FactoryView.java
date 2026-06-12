@@ -232,25 +232,28 @@ class Canvas extends JComponent {
 
     // Welding robot
     void drawWelder(Graphics2D g2) {
-        int bx=WELDER_BASE[0], by=WELDER_BASE[1];
-        int ex=m.welderPosition[0], ey=m.welderPosition[1];
-        g2.setColor(FactoryView.COL_WELD.darker());
-        g2.setStroke(new BasicStroke(12, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        g2.drawLine(bx, by, ex, ey);
-        g2.setColor(FactoryView.COL_WELD);
-        g2.setStroke(new BasicStroke(4));
-        g2.drawLine(bx, by, ex, ey);
-        g2.setColor(FactoryView.COL_WELD.darker());
-        g2.setStroke(new BasicStroke(10, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        g2.drawLine(bx-30, by-30, bx+30, by+30);
-        g2.drawLine(bx-30, by+30, bx+30, by-30);
-        // Weld glow
-        if (m.welding && rng.nextBoolean()) {
-            g2.setColor(FactoryView.GLOW);
-            g2.fillOval(ex-20, ey-20, 40, 40);
+        for (int i = 0; i < 2; i++) {
+            int bx = WELDER_BASE[0], by = WELDER_BASE[1];
+            int ex = m.welderPositions[i][0], ey = m.welderPositions[i][1];
+            
+            g2.setColor(FactoryView.COL_WELD.darker());
+            g2.setStroke(new BasicStroke(12, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g2.drawLine(bx, by, ex, ey);
+            g2.setColor(FactoryView.COL_WELD);
+            g2.setStroke(new BasicStroke(4));
+            g2.drawLine(bx, by, ex, ey);
+            g2.setColor(FactoryView.COL_WELD.darker());
+            g2.setStroke(new BasicStroke(10, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g2.drawLine(bx-30, by-30, bx+30, by+30);
+            g2.drawLine(bx-30, by+30, bx+30, by-30);
+            
+            if (m.welding && rng.nextBoolean()) {
+                g2.setColor(FactoryView.GLOW);
+                g2.fillOval(ex-20, ey-20, 40, 40);
+            }
+            g2.setColor(m.welding ? new Color(0xFF,0x50,0x10) : FactoryView.COL_WELD);
+            g2.fillOval(ex-10, ey-10, 20, 20);
         }
-        g2.setColor(m.welding ? new Color(0xFF,0x50,0x10) : FactoryView.COL_WELD);
-        g2.fillOval(ex-10, ey-10, 20, 20);
     }
 
     // Moving robot
