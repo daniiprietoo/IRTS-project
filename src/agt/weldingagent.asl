@@ -54,43 +54,48 @@ holdersReleased    :- holders(N) & holdersReleased(N).
      .broadcast(tell, targeted_by_other(Joint)).
 
 +!weldParts : jointPartsInPlace(Joint) & not joint(Joint) 
-            & not my_target(Joint) & not targeted_by_other(Joint)
+            & not my_target(_) & not targeted_by_other(Joint)
   <- !claimJoint(Joint);
      !weldParts.
 
+
 // Plan to lock the target of the welder agent
++!weldParts : my_target(Joint) & not joint(Joint) & joint_needs_full_lock(Joint)
+              & my_lock(full) & (not lockedArea(1) | not lockedArea(2))
+   <- .print("Welding robot: Factory denied FULL lock. Retrying...");
+      -my_lock(full);
+      .wait(500);
+      !weldParts.
+
++!weldParts : my_target(Joint) & not joint(Joint) & jointInArea(Joint, A) & not joint_needs_full_lock(Joint)
+              & my_lock(A) & not lockedArea(A)
+   <- .print("Welding robot: Factory denied lock for area ", A, ". Retrying...");
+      -my_lock(A);
+      .wait(500);
+      !weldParts.
+
+
+
+// Request FULL lock
 +!weldParts : my_target(Joint) & not joint(Joint)
             & joint_needs_full_lock(Joint)
-              & (not lockedArea(1) & not lockedArea(2))
+              & not lockedArea(1) & not lockedArea(2)
+              & not my_lock(_) 
    <- .print("Welding robot: requesting FULL lock (areas 1 & 2) for joint ", Joint, ".");
       .my_name(Me);
+      +my_lock(full); 
       .send(assemblyareaagent, achieve, fullAreaLockFor(Me));
       .wait(1000);
       !weldParts.
 
-+!weldParts : my_target(Joint) & not joint(Joint)
-            & joint_needs_full_lock(Joint)
-              & lockedArea(2) & not lockedArea(1)
-   <- .print("Welding robot: requesting lock (area 1) for joint ", Joint, " (area 2 already locked).");
-      .my_name(Me);
-      .send(assemblyareaagent, achieve, lockAreaFor(Me, 1));
-      .wait(1000);
-      !weldParts.
-
-+!weldParts : my_target(Joint) & not joint(Joint)
-            & joint_needs_full_lock(Joint)
-              & lockedArea(1) & not lockedArea(2)
-   <- .print("Welding robot: requesting lock (area 2) for joint ", Joint, " (area 1 already locked).");
-      .my_name(Me);
-      .send(assemblyareaagent, achieve, lockAreaFor(Me, 2));
-      .wait(1000);
-      !weldParts.
-
+// Request PARTIAL lock
 +!weldParts : my_target(Joint) & not joint(Joint)
               & jointInArea(Joint, A) & not joint_needs_full_lock(Joint)
               & not lockedArea(A)
+              & not my_lock(A)
    <- .print("Welding robot: requesting area ", A, " for joint ", Joint, ".");
       .my_name(Me);
+      +my_lock(A);
       .send(assemblyareaagent, achieve, lockAreaFor(Me, A));
       .wait(1000);
       !weldParts.
@@ -100,6 +105,7 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 +!weldParts : my_target(Joint) & not joint(Joint)
               & joint_needs_full_lock(Joint)
               & lockedArea(1) & lockedArea(2)
+              & my_lock(full) 
    <- .print("Welding robot: welding joint ", Joint, " with FULL lock.");
       .drop_intention(parkArm);
       ?jointPos(Joint, X, Y);
@@ -116,6 +122,7 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 +!weldParts : my_target(Joint) & not joint(Joint)
               & jointInArea(Joint, A) & not joint_needs_full_lock(Joint)
               & lockedArea(A)
+              & my_lock(A) 
    <- .print("Welding robot: welding joint ", Joint, " in area ", A, ".");
       .drop_intention(parkArm);
       ?jointPos(Joint, X, Y);
@@ -150,27 +157,29 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 
 +!moveTo(X, Y) : welder(X, Y).
 
-// Park arm
+// Park arm base
 +!parkArm : waitingposition(X, Y) & not welder(X, Y)
 <- !moveTo(X, Y); !parkArm.
 
 // Bug fix: bind X,Y before moveTo (were unbound in Jason 2.x version)
 // Park and release FULL lock
-+!parkArm : lockedArea(1) & lockedArea(2)
++!parkArm : lockedArea(1) & lockedArea(2) & my_lock(full)
 <- ?waitingposition(X, Y);
    !moveTo(X, Y);
    .print("Welding arm: releasing FULL lock (areas 1 & 2)");
    .my_name(Me);
+   -my_lock(full); 
    .send(assemblyareaagent, achieve, fullAreaUnlockFor(Me));
    .wait(200);
    !parkArm.
 
 // Park and release PARTIAL lock
-+!parkArm : lockedArea(Area)
++!parkArm : lockedArea(Area) & my_lock(Area)
 <- ?waitingposition(X, Y);
    !moveTo(X, Y);
    .print("Welding arm: releasing lock from area ", Area);
    .my_name(Me);
+   -my_lock(Area); 
    .send(assemblyareaagent, achieve, unlockAreaFor(Me, Area));
    .wait(200);
    !parkArm.
