@@ -6,10 +6,11 @@ public class WelderArtifact extends Artifact {
 
     private FactoryModel model;
 
-    void init() {
+    void init(String agentName) {
         model = FactoryModel.getInstance();
-        defineObsProperty("welder_x", 1000);
-        defineObsProperty("welder_y", 470);
+        int index = agentName.equals("weldingagent1") ? 0 : 1;
+        defineObsProperty("welder_x", model.welderPositions[index][0]);
+        defineObsProperty("welder_y", model.welderPositions[index][1]);
     }
 
     @OPERATION

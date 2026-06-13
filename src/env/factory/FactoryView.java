@@ -247,11 +247,11 @@ class Canvas extends JComponent {
             g2.drawLine(bx-30, by-30, bx+30, by+30);
             g2.drawLine(bx-30, by+30, bx+30, by-30);
             
-            if (m.welding && rng.nextBoolean()) {
+            if (m.welding[i] && rng.nextBoolean()) {
                 g2.setColor(FactoryView.GLOW);
                 g2.fillOval(ex-20, ey-20, 40, 40);
             }
-            g2.setColor(m.welding ? new Color(0xFF,0x50,0x10) : FactoryView.COL_WELD);
+            g2.setColor(m.welding[i] ? new Color(0xFF,0x50,0x10) : FactoryView.COL_WELD);
             g2.fillOval(ex-10, ey-10, 20, 20);
         }
     }

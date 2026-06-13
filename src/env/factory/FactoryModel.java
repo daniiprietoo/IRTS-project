@@ -40,7 +40,7 @@ import java.util.Arrays;
         boolean[] binfull  = new boolean[BINS];
         int   gripperPart  = -1;
         int   gripperAngle = 90;
-        boolean welding    = false;
+        boolean[] welding = {false, false};
         boolean moving     = false;
         boolean[] holding  = new boolean[HOLDERS];
         boolean[] joint    = new boolean[JOINTS];
@@ -87,19 +87,30 @@ import java.util.Arrays;
             else if (ag.equals("movingagent")) { moving = false; Arrays.fill(joint, false); }
         }
 
-    synchronized void weld(String ag) {
-        int index = ag.equals("weldingagent1") ? 0 : 1;
-        for (int i = 0; i < JOINTS; i++) {
-            if (welderPositions[index][0] == JOINT_POS[i][0]
-                    && welderPositions[index][1] == JOINT_POS[i][1]) {
-                welding = true;
-                try { Thread.sleep(5000); }
-                catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-                joint[i] = true;
-                welding  = false;
+        void weld(String ag) {
+            int index = ag.equals("weldingagent1") ? 0 : 1;
+            int targetJoint = -1;
+            synchronized(this) {
+                for (int i = 0; i < JOINTS; i++) {
+                    if (welderPositions[index][0] == JOINT_POS[i][0] && welderPositions[index][1] == JOINT_POS[i][1]) {
+                        welding[index] = true;
+                        targetJoint = i;
+                        break;
+                    }
+                }
+            }
+            if (targetJoint != -1) {
+                try { 
+                    Thread.sleep(5000); 
+                } catch (InterruptedException e) { 
+                    Thread.currentThread().interrupt(); 
+                }
+                synchronized(this) {
+                    joint[targetJoint] = true;
+                    welding[index] = false;
+                }
             }
         }
-    }
 
         synchronized void moveTowards(String ag, int tx, int ty, int ta) {
             if (ag.equals("roboticarmagent")) {
