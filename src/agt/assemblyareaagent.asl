@@ -9,7 +9,7 @@
 // ============================================================
 {include("focus_factory.asl")}
 
-// Define welder agents allowed to share occupied areas with other welders
+// welder agents allowed to share areas with other welders
 is_welder(weldingagent1).
 is_welder(weldingagent2).
 
@@ -31,7 +31,7 @@ can_lock(Ag, Area) :- is_welder(Ag) & not (lockedAreaFor(Other, Area) & not is_w
 @fullLock [atomic]
 +!fullAreaLockFor(Agent)
     : factory_art_id(_)
-    & can_lock(Agent, 1) & can_lock(Agent, 2)
+    & can_lock(Agent, 1) & can_lock(Agent, 2) // implementatio of shared lock rule for welders
 <- .print("Assembly Area Agent: locking full area for ", Agent);
    +lockedAreaFor(Agent, 1);
    +lockedAreaFor(Agent, 2);

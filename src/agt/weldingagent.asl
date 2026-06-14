@@ -140,7 +140,7 @@ holdersReleased    :- holders(N) & holdersReleased(N).
    .wait(1000);
    !weldParts.
 
-// Execute weld with FULL lock
+// weld with FULL lock
 +!weldParts : my_target(Joint) & not joint(Joint)
               & joint_needs_full_lock(Joint)
               & lockedArea(1) & lockedArea(2)
@@ -159,7 +159,7 @@ holdersReleased    :- holders(N) & holdersReleased(N).
    !!parkArm;
    !weldParts.
 
-// Execute weld with PARTIAL lock
+//  weld with PARTIAL lock
 +!weldParts : my_target(Joint) & not joint(Joint)
               & jointInArea(Joint, A) & not joint_needs_full_lock(Joint)
               & lockedArea(A)
@@ -182,7 +182,7 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 <- .wait(200);
    !weldParts.
 
-// Frame cleanup
+//  cleanup
 +!forgetJoints : joint(N)
 <- -joint(N);
    -my_target(N);
@@ -201,12 +201,12 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 
 +!moveTo(X, Y) : welder(X, Y).
 
-// Park arm base
+// Park arm
 +!parkArm : waitingposition(X, Y) & not welder(X, Y)
 <- !moveTo(X, Y);
    !!parkArm.
 
-// Park and release FULL lock
+// Park and release FULL 
 +!parkArm : lockedArea(1) & lockedArea(2) & my_lock(full)
 <- ?waitingposition(X, Y);
    !moveTo(X, Y);
@@ -217,7 +217,7 @@ holdersReleased    :- holders(N) & holdersReleased(N).
    .wait(200);
    !parkArm.
 
-// Park and release PARTIAL lock
+// Park and release PARTIAL 
 +!parkArm : lockedArea(Area) & my_lock(Area)
 <- ?waitingposition(X, Y);
    !moveTo(X, Y);
