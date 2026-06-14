@@ -51,6 +51,10 @@ weldingCompleted   :- joints(N) & jointDone(N).
    !moveAway;
    !removeFrame.
 
++!removeFrame : weldingCompleted & not my_lock(_) & (lockedArea(1) | lockedArea(2))
+<- .wait(200); 
+   !removeFrame.
+   
 +!removeFrame : not weldingCompleted
 <- .wait(200); !removeFrame.
 

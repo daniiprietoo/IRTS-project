@@ -68,13 +68,29 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 <- !forgetJoints;
    !weldParts.
 
-// Select only the joints assigned to this welder
-+!weldParts : welder_id(ID) & joint_owner(Joint, ID)
-            & jointPartsInPlace(Joint)
+// Select any joint that is ready, not done, and not targeted by another welder
++!weldParts : jointPartsInPlace(Joint)
             & not joint(Joint)
+            & not targeted_joint(Joint)
             & not my_target(_)
-  <- +my_target(Joint);
-     .print("Welding robot: selected joint ", Joint, " to weld.");
+  <- 
+     .wait(math.random * 1000); // Random wait to avoid collisions
+     if (not joint(Joint) & not targeted_joint(Joint)) {
+       +my_target(Joint);
+       +targeted_joint(Joint);
+       .broadcast(tell, targeted_joint(Joint)); // Claim the joint globally
+       .print("Welding robot: selected joint ", Joint, " to weld.");
+       !weldParts;
+     } else {
+       !weldParts;
+     }.
+
+// If another agent targeted the same joint and my name is weldingagent1, yield to weldingagent2
++targeted_joint(Joint)[source(Other)] : my_target(Joint) & .my_name(Me) & Me = weldingagent1 & Other = weldingagent2
+  <- .print("Welding robot: yielding target joint ", Joint, " to ", Other);
+     -my_target(Joint);
+     -targeted_joint(Joint);
+     !parkArm;
      !weldParts.
 
 // If someone else welded our current target already, drop it
@@ -137,8 +153,10 @@ holdersReleased    :- holders(N) & holdersReleased(N).
    weld(Me);
    +joint(Joint);
    -my_target(Joint);
+   -targeted_joint(Joint);
    .broadcast(tell, joint(Joint));
-   !parkArm;
+   .broadcast(untell, targeted_joint(Joint));
+   !!parkArm;
    !weldParts.
 
 // Execute weld with PARTIAL lock
@@ -154,8 +172,10 @@ holdersReleased    :- holders(N) & holdersReleased(N).
    weld(Me);
    +joint(Joint);
    -my_target(Joint);
+   -targeted_joint(Joint);
    .broadcast(tell, joint(Joint));
-   !parkArm;
+   .broadcast(untell, targeted_joint(Joint));
+   !!parkArm;
    !weldParts.
 
 +!weldParts : true
@@ -166,7 +186,9 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 +!forgetJoints : joint(N)
 <- -joint(N);
    -my_target(N);
+   -targeted_joint(N);
    .broadcast(untell, joint(N));
+   .broadcast(untell, targeted_joint(N));
    !forgetJoints.
 
 +!forgetJoints.
@@ -182,7 +204,7 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 // Park arm base
 +!parkArm : waitingposition(X, Y) & not welder(X, Y)
 <- !moveTo(X, Y);
-   !parkArm.
+   !!parkArm.
 
 // Park and release FULL lock
 +!parkArm : lockedArea(1) & lockedArea(2) & my_lock(full)
