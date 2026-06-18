@@ -184,9 +184,9 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 
 //  cleanup
 +!forgetJoints : joint(N)
-<- -joint(N);
-   -my_target(N);
-   -targeted_joint(N);
+<- .abolish(joint(N));
+   .abolish(my_target(N));
+   .abolish(targeted_joint(N));
    .broadcast(untell, joint(N));
    .broadcast(untell, targeted_joint(N));
    !forgetJoints.
