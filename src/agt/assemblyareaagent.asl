@@ -9,17 +9,11 @@
 // ============================================================
 {include("focus_factory.asl")}
 
-// welder agents allowed to share areas with other welders
-is_welder(weldingagent1).
-is_welder(weldingagent2).
-
 // A lock is granted if:
 // 1) Agent already holds it, OR
-// 2) Area is empty, OR
-// 3) Requester is a welder and all current holders are welders.
+// 2) Area is empty.
 can_lock(Ag, Area) :- lockedAreaFor(Ag, Area).
 can_lock(Ag, Area) :- not lockedAreaFor(_, Area).
-can_lock(Ag, Area) :- is_welder(Ag) & not (lockedAreaFor(Other, Area) & not is_welder(Other)).
 
 !start.
 
@@ -31,7 +25,7 @@ can_lock(Ag, Area) :- is_welder(Ag) & not (lockedAreaFor(Other, Area) & not is_w
 @fullLock [atomic]
 +!fullAreaLockFor(Agent)
     : factory_art_id(_)
-    & can_lock(Agent, 1) & can_lock(Agent, 2) // implementatio of shared lock rule for welders
+   & can_lock(Agent, 1) & can_lock(Agent, 2)
 <- .print("Assembly Area Agent: locking full area for ", Agent);
    +lockedAreaFor(Agent, 1);
    +lockedAreaFor(Agent, 2);

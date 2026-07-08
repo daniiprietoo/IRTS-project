@@ -29,13 +29,6 @@ jointInArea(5, 2).
 welder_id(weldingagent1, 1).
 welder_id(weldingagent2, 2).
 
-joint_owner(1, 1).
-joint_owner(3, 1).
-joint_owner(5, 1).
-
-joint_owner(2, 2).
-joint_owner(4, 2).
-
 holdersReleased(N) :- not holding(N) & (N = 1 | holdersReleased(N-1)).
 holdersReleased    :- holders(N) & holdersReleased(N).
 
