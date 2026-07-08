@@ -62,6 +62,8 @@ holdersReleased    :- holders(N) & holdersReleased(N).
             & not joint(Joint)
             & not targeted_joint(Joint)
             & not my_target(_)
+            & jointInArea(Joint, A)   // <--- NEW: Get the area of the joint
+            & not skip_area(A)        // <--- NEW: Ensure we aren't skipping this area
   <- 
      .wait(math.random * 1000); // Random wait to avoid collisions
      if (not joint(Joint) & not targeted_joint(Joint)) {
@@ -102,13 +104,16 @@ holdersReleased    :- holders(N) & holdersReleased(N).
    .wait(1000);
    !weldParts.
 
-// Area lock denied/retry
+// Area lock denied/retry -> Drop target and check other areas
 +!weldParts : my_target(Joint) & not joint(Joint)
               & jointInArea(Joint, A)
               & my_lock(A) & not lockedArea(A)
-<- .print("Welding robot: factory denied lock for area ", A, ". Retrying...");
+<- .print("Welding robot: factory denied lock for area ", A, ". Dropping target to check elsewhere.");
    -my_lock(A);
-   .wait(500);
+   -my_target(Joint);
+   -targeted_joint(Joint);
+   .broadcast(untell, targeted_joint(Joint)); // Let the other welder claim it later
+   +skip_area(A); // Temporarily ignore this area
    !weldParts.
 
 // weld with area lock
@@ -128,6 +133,11 @@ holdersReleased    :- holders(N) & holdersReleased(N).
    .broadcast(tell, joint(Joint));
    .broadcast(untell, targeted_joint(Joint));
    !!parkArm;
+   !weldParts.
+
++!weldParts : skip_area(A)
+<- .wait(500);
+   -skip_area(A);
    !weldParts.
 
 +!weldParts : true

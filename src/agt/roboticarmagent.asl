@@ -42,20 +42,32 @@ waitingposition(270, 613, 90).
 <- .wait(200); !positionParts.
 
 // ── Area lock requests ────────────────────────────────────────
-
 +!positionParts : binfull(Part) & Part <= 5 & not holding(Part)
-                & not lockedArea(1)
+                & not lockedArea(1) & not lockedArea(2) & not skip_area(1)
 <- .print("Robotic arm agent: requesting area 1.");
    .my_name(Agent);
    .send(assemblyareaagent, achieve, lockAreaFor(Agent, 1));
    .wait(300);
+   if (not lockedArea(1)) {
+       +skip_area(1);
+   }
    !positionParts.
 
-+!positionParts : binfull(6) & not holding(6) & not lockedArea(2)
++!positionParts : binfull(6) & not holding(6) 
+                & not lockedArea(2) & not lockedArea(1) & not skip_area(2)
 <- .print("Robotic arm agent: requesting area 2.");
    .my_name(Agent);
    .send(assemblyareaagent, achieve, lockAreaFor(Agent, 2));
    .wait(300);
+   if (not lockedArea(2)) {
+       +skip_area(2);
+   }
+   !positionParts.
+
+// If both areas were checked and denied, clear skips and wait before retrying
++!positionParts : skip_area(1) | skip_area(2)
+<- .abolish(skip_area(_));
+   .wait(500);
    !positionParts.
    
 // ── Part sequencing ───────────────────────────────────────────
