@@ -26,19 +26,35 @@ weldingCompleted   :- joints(N) & jointDone(N).
    .print("Moving robot: waiting for finished frame");
    !removeFrame.
 
-+!removeFrame : weldingCompleted & not (lockedArea(1) & lockedArea(2))
-<- .print("Moving robot: requesting areas 1 and 2.");
-   .my_name(Agent);
-   .send(assemblyareaagent, achieve, fullAreaLockFor(Agent));
-   .wait(200);
-   !removeFrame.
+// Request FULL lock
++!removeFrame : weldingCompleted 
+              & not lockedArea(1) & not lockedArea(2)
+              & not my_lock(_) 
+   <- .print("Moving robot: requesting FULL lock (areas 1 & 2).");
+      .my_name(Me);
+      +my_lock(full); 
+      .send(assemblyareaagent, achieve, fullAreaLockFor(Me));
+      .wait(1000);
+      !removeFrame.
 
-+!removeFrame : weldingCompleted & lockedArea(1) & lockedArea(2)
+// Denied lock handler
++!removeFrame : weldingCompleted & my_lock(full) & (not lockedArea(1) | not lockedArea(2))
+   <- .print("Moving robot: Factory denied FULL lock. Retrying...");
+      -my_lock(full);
+      .wait(500);
+      !removeFrame.
+
+// Execute move 
++!removeFrame : weldingCompleted & lockedArea(1) & lockedArea(2) & my_lock(full)
 <- .print("Moving robot: moving finished frame away.");
    !pickFrame;
    !moveAway;
    !removeFrame.
 
++!removeFrame : weldingCompleted & not my_lock(_) & (lockedArea(1) | lockedArea(2))
+<- .wait(200); 
+   !removeFrame.
+   
 +!removeFrame : not weldingCompleted
 <- .wait(200); !removeFrame.
 
@@ -69,10 +85,12 @@ weldingCompleted   :- joints(N) & jointDone(N).
 <- ?waitingposition(X, Y);
    !moveTo(X, Y).
 
-+!awaitUnlockArea : lockedArea(_)
+// Safely unlock the areas
++!awaitUnlockArea : lockedArea(1) & lockedArea(2) & my_lock(full)
 <- .print("Moving robot: giving way to others.");
-   .my_name(Agent);
-   .send(assemblyareaagent, achieve, fullAreaUnlockFor(Agent));
+   .my_name(Me);
+   -my_lock(full);
+   .send(assemblyareaagent, achieve, fullAreaUnlockFor(Me));
    .wait(200);
    !awaitUnlockArea.
 

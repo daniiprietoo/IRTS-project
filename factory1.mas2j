@@ -26,7 +26,7 @@ MAS factory1 {
         // roboticarmagent creates the shared factory artifact
         // so it must start first (or retry via !focus_factory).
         roboticarmagent agentArchClass jaca.CAgentArch;
-        weldingagent agentArchClass jaca.CAgentArch;
+        weldingagent #2 agentArchClass jaca.CAgentArch;
         movingagent agentArchClass jaca.CAgentArch;
         assemblyareaagent agentArchClass jaca.CAgentArch;
         holdingagent #6 agentArchClass jaca.CAgentArch;

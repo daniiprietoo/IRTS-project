@@ -40,14 +40,14 @@ import java.util.Arrays;
         boolean[] binfull  = new boolean[BINS];
         int   gripperPart  = -1;
         int   gripperAngle = 90;
-        boolean welding    = false;
+        boolean[] welding = {false, false};
         boolean moving     = false;
         boolean[] holding  = new boolean[HOLDERS];
         boolean[] joint    = new boolean[JOINTS];
         boolean[] lockArea = new boolean[AREAS];
 
         int[] gripperPosition = { 270, 613 };
-        int[] welderPosition  = { 1000, 470 };
+        int[][] welderPositions = { {1000, 470}, {1060, 470} };
         int[] moverPosition   = { 500, 70 };
 
     private FactoryModel() {
@@ -87,15 +87,27 @@ import java.util.Arrays;
             else if (ag.equals("movingagent")) { moving = false; Arrays.fill(joint, false); }
         }
 
-        synchronized void weld() {
-            for (int i = 0; i < JOINTS; i++) {
-                if (welderPosition[0] == JOINT_POS[i][0]
-                        && welderPosition[1] == JOINT_POS[i][1]) {
-                    welding = true;
-                    try { Thread.sleep(5000); }
-                    catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-                    joint[i] = true;
-                    welding  = false;
+        void weld(String ag) {
+            int index = ag.equals("weldingagent1") ? 0 : 1;
+            int targetJoint = -1;
+            synchronized(this) {
+                for (int i = 0; i < JOINTS; i++) {
+                    if (welderPositions[index][0] == JOINT_POS[i][0] && welderPositions[index][1] == JOINT_POS[i][1]) {
+                        welding[index] = true;
+                        targetJoint = i;
+                        break;
+                    }
+                }
+            }
+            if (targetJoint != -1) {
+                try { 
+                    Thread.sleep(5000); 
+                } catch (InterruptedException e) { 
+                    Thread.currentThread().interrupt(); 
+                }
+                synchronized(this) {
+                    joint[targetJoint] = true;
+                    welding[index] = false;
                 }
             }
         }
@@ -105,9 +117,12 @@ import java.util.Arrays;
                 gripperPosition[0] = step(gripperPosition[0], tx);
                 gripperPosition[1] = step(gripperPosition[1], ty);
                 gripperAngle       = stepAngle(gripperAngle, ta);
-            } else if (ag.equals("weldingagent")) {
-                welderPosition[0] = step(welderPosition[0], tx);
-                welderPosition[1] = step(welderPosition[1], ty);
+            } else if (ag.equals("weldingagent1")) {
+                welderPositions[0][0] = step(welderPositions[0][0], tx);
+                welderPositions[0][1] = step(welderPositions[0][1], ty);
+            } else if (ag.equals("weldingagent2")) {
+                welderPositions[1][0] = step(welderPositions[1][0], tx);
+                welderPositions[1][1] = step(welderPositions[1][1], ty);
             } else if (ag.equals("movingagent")) {
                 moverPosition[0] = step(moverPosition[0], tx);
                 moverPosition[1] = step(moverPosition[1], ty);

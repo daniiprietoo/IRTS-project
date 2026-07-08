@@ -1,4 +1,4 @@
 binnumber(1).
-quota(6).
+quota(4).
 
 {include("humanbinagent.asl")}

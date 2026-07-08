@@ -6,24 +6,28 @@ public class WelderArtifact extends Artifact {
 
     private FactoryModel model;
 
-    void init() {
+    void init(String agentName) {
         model = FactoryModel.getInstance();
-        defineObsProperty("welder", 1000, 470);
+        int index = agentName.equals("weldingagent1") ? 0 : 1;
+        defineObsProperty("welder_x", model.welderPositions[index][0]);
+        defineObsProperty("welder_y", model.welderPositions[index][1]);
     }
 
     @OPERATION
-    void weld() {
-        model.weld();
-        pushPosition();
+    void weld(String agentName) {
+        model.weld(agentName);
+        pushPosition(agentName);
     }
 
     @OPERATION
     void move_towards(String ag, int x, int y, int angle) {
         model.moveTowards(ag, x, y, angle);
-        pushPosition();
+        pushPosition(ag);
     }
 
-    private void pushPosition() {
-        updateObsProperty("welder", model.welderPosition[0], model.welderPosition[1]);
+    private void pushPosition(String agentName) {
+        int index = agentName.equals("weldingagent1") ? 0 : 1;
+        updateObsProperty("welder_x", model.welderPositions[index][0]);
+        updateObsProperty("welder_y", model.welderPositions[index][1]);
     }
 }
