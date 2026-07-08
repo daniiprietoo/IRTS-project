@@ -62,11 +62,13 @@ holdersReleased    :- holders(N) & holdersReleased(N).
             & not joint(Joint)
             & not targeted_joint(Joint)
             & not my_target(_)
-            & jointInArea(Joint, A)   // <--- NEW: Get the area of the joint
-            & not skip_area(A)        // <--- NEW: Ensure we aren't skipping this area
+            & jointInArea(Joint, A)  
+            & not skip_area(A)       
+            & (not lockedArea(A) | my_lock(A)) 
   <- 
-     .wait(math.random * 1000); // Random wait to avoid collisions
-     if (not joint(Joint) & not targeted_joint(Joint)) {
+     .wait(math.random * 1000);
+     // Random wait to avoid collisions
+     if (not joint(Joint) & not targeted_joint(Joint) & (not lockedArea(A) | my_lock(A))) {
        +my_target(Joint);
        +targeted_joint(Joint);
        .broadcast(tell, targeted_joint(Joint)); // Claim the joint globally
@@ -135,9 +137,9 @@ holdersReleased    :- holders(N) & holdersReleased(N).
    !!parkArm;
    !weldParts.
 
-+!weldParts : skip_area(A)
++!weldParts : skip_area(_)
 <- .wait(500);
-   -skip_area(A);
+   .abolish(skip_area(_));
    !weldParts.
 
 +!weldParts : true
