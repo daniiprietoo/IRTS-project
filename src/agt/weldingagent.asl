@@ -4,8 +4,8 @@
 //  Changes from Jason 2.x:
 //   1. !focus_factory (lookupArtifact + focus with retry).
 //   2. move_towards and weld are CArtAgO operations.
-//   3. Bug fixed: ?waitingposition(X,Y) added before !moveTo
-//      in the lockedArea(Area) variant of +!parkArm.
+//   3. Area locking is handled per joint area; no full-area lock
+//      is requested by this agent anymore.
 // ============================================================
 {include("focus_factory.asl")}
 
@@ -24,10 +24,6 @@ jointInArea(2, 1).
 jointInArea(3, 1).
 jointInArea(4, 2).
 jointInArea(5, 2).
-
-// These still require full lock
-joint_needs_full_lock(4).
-joint_needs_full_lock(5).
 
 // Fixed ownership so welders never choose the same joint
 welder_id(weldingagent1, 1).
@@ -102,36 +98,9 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 
 // -------- Lock plans --------
 
-// FULL lock denied/retry
-+!weldParts : my_target(Joint) & not joint(Joint) & joint_needs_full_lock(Joint)
-              & my_lock(full) & (not lockedArea(1) | not lockedArea(2))
-<- .print("Welding robot: factory denied FULL lock. Retrying...");
-   -my_lock(full);
-   .wait(500);
-   !weldParts.
-
-// PARTIAL lock denied/retry
-+!weldParts : my_target(Joint) & not joint(Joint) & jointInArea(Joint, A) & not joint_needs_full_lock(Joint)
-              & my_lock(A) & not lockedArea(A)
-<- .print("Welding robot: factory denied lock for area ", A, ". Retrying...");
-   -my_lock(A);
-   .wait(500);
-   !weldParts.
-
-// Request FULL lock
+// Request area lock
 +!weldParts : my_target(Joint) & not joint(Joint)
-              & joint_needs_full_lock(Joint)
-              & not my_lock(_)
-<- .print("Welding robot: requesting FULL lock (areas 1 & 2) for joint ", Joint, ".");
-   .my_name(Me);
-   +my_lock(full);
-   .send(assemblyareaagent, achieve, fullAreaLockFor(Me));
-   .wait(1000);
-   !weldParts.
-
-// Request PARTIAL lock
-+!weldParts : my_target(Joint) & not joint(Joint)
-              & jointInArea(Joint, A) & not joint_needs_full_lock(Joint)
+              & jointInArea(Joint, A)
               & not my_lock(A)
 <- .print("Welding robot: requesting area ", A, " for joint ", Joint, ".");
    .my_name(Me);
@@ -140,28 +109,18 @@ holdersReleased    :- holders(N) & holdersReleased(N).
    .wait(1000);
    !weldParts.
 
-// weld with FULL lock
+// Area lock denied/retry
 +!weldParts : my_target(Joint) & not joint(Joint)
-              & joint_needs_full_lock(Joint)
-              & lockedArea(1) & lockedArea(2)
-              & my_lock(full)
-<- .print("Welding robot: welding joint ", Joint, " with FULL lock.");
-   .drop_intention(parkArm);
-   ?jointPos(Joint, X, Y);
-   !moveTo(X, Y);
-   .my_name(Me);
-   weld(Me);
-   +joint(Joint);
-   -my_target(Joint);
-   -targeted_joint(Joint);
-   .broadcast(tell, joint(Joint));
-   .broadcast(untell, targeted_joint(Joint));
-   !!parkArm;
+              & jointInArea(Joint, A)
+              & my_lock(A) & not lockedArea(A)
+<- .print("Welding robot: factory denied lock for area ", A, ". Retrying...");
+   -my_lock(A);
+   .wait(500);
    !weldParts.
 
-//  weld with PARTIAL lock
+// weld with area lock
 +!weldParts : my_target(Joint) & not joint(Joint)
-              & jointInArea(Joint, A) & not joint_needs_full_lock(Joint)
+              & jointInArea(Joint, A)
               & lockedArea(A)
               & my_lock(A)
 <- .print("Welding robot: welding joint ", Joint, " in area ", A, ".");
@@ -206,18 +165,7 @@ holdersReleased    :- holders(N) & holdersReleased(N).
 <- !moveTo(X, Y);
    !!parkArm.
 
-// Park and release FULL 
-+!parkArm : lockedArea(1) & lockedArea(2) & my_lock(full)
-<- ?waitingposition(X, Y);
-   !moveTo(X, Y);
-   .print("Welding arm: releasing FULL lock (areas 1 & 2)");
-   .my_name(Me);
-   -my_lock(full);
-   .send(assemblyareaagent, achieve, fullAreaUnlockFor(Me));
-   .wait(200);
-   !parkArm.
-
-// Park and release PARTIAL 
+// Park and release area lock
 +!parkArm : lockedArea(Area) & my_lock(Area)
 <- ?waitingposition(X, Y);
    !moveTo(X, Y);

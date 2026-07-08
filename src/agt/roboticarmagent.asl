@@ -44,10 +44,10 @@ waitingposition(270, 613, 90).
 // ── Area lock requests ────────────────────────────────────────
 
 +!positionParts : binfull(Part) & Part <= 5 & not holding(Part)
-                & (not lockedArea(2) | not lockedArea(1))
-<- .print("Robotic arm agent: requesting areas 1 and 2.");
+                & not lockedArea(1)
+<- .print("Robotic arm agent: requesting area 1.");
    .my_name(Agent);
-   .send(assemblyareaagent, achieve, fullAreaLockFor(Agent));
+   .send(assemblyareaagent, achieve, lockAreaFor(Agent, 1));
    .wait(300);
    !positionParts.
 
@@ -60,19 +60,19 @@ waitingposition(270, 613, 90).
    
 // ── Part sequencing ───────────────────────────────────────────
 
-+!positionParts : binfull(1) & not holding(1) & lockedArea(1) & lockedArea(2)
++!positionParts : binfull(1) & not holding(1) & lockedArea(1)
 <- !pickupAndpositionPart(1); !positionParts.
 
-+!positionParts : binfull(2) & not holding(2) & lockedArea(1) & lockedArea(2)
++!positionParts : binfull(2) & not holding(2) & lockedArea(1)
 <- !pickupAndpositionPart(2); !positionParts.
 
-+!positionParts : binfull(3) & not holding(3) & lockedArea(1) & lockedArea(2)
++!positionParts : binfull(3) & not holding(3) & lockedArea(1)
 <- !pickupAndpositionPart(3); !positionParts.
 
-+!positionParts : binfull(4) & not holding(4) & lockedArea(1) & lockedArea(2)
++!positionParts : binfull(4) & not holding(4) & lockedArea(1)
 <- !pickupAndpositionPart(4); !positionParts.
 
-+!positionParts : binfull(5) & not holding(5) & lockedArea(1) & lockedArea(2)
++!positionParts : binfull(5) & not holding(5) & lockedArea(1)
 <- !pickupAndpositionPart(5); !positionParts.
 
 +!positionParts : binfull(6) & not holding(6) & lockedArea(2)
@@ -129,6 +129,13 @@ waitingposition(270, 613, 90).
    !moveTo(X, Y, Angle);
    !parkArm.
 
++!parkArm : lockedArea(Area)
+<- .print("Robotic arm agent: releasing lock from area ", Area);
+   .my_name(Agent);
+   .send(assemblyareaagent, achieve, unlockAreaFor(Agent, Area));
+   .wait(200);
+   !parkArm.
+   
 +!parkArm : lockedArea(1) & lockedArea(2)
 <- .print("Robotic arm agent: releasing FULL lock");
    .my_name(Agent);
@@ -136,11 +143,5 @@ waitingposition(270, 613, 90).
    .wait(200);
    !parkArm.
 
-+!parkArm : lockedArea(Area)
-<- .print("Robotic arm agent: releasing lock from area ", Area);
-   .my_name(Agent);
-   .send(assemblyareaagent, achieve, unlockAreaFor(Agent, Area));
-   .wait(200);
-   !parkArm.
 
 +!parkArm.
