@@ -207,48 +207,51 @@ Then we created plans to handle the claiming logic:
 
 Essentially this would meet the requirements of having two welders working simultaneously, even in the same area because joints 1,2,3 are in area 1 and joints 4,5 are in area 2. However, we thought that this was not a very flexible solution and we wanted to implement a more dynamic claiming of the joints.
 
-**Final approach:** Dynamic claiming with a random wait to break ties between welders, also giving priority to welder2 by having welder1 yielding as a fallback plan.
+**Final approach:** Dynamic claiming where both welders can claim any joint, but if one of them tries to claim a joint in an area that is already locked by the other welder, it will broadcast its dropping of the target and try again later.
 
 ```agentspeak
 +!weldParts : jointPartsInPlace(Joint)
             & not joint(Joint)
             & not targeted_joint(Joint)
             & not my_target(_)
-<- .wait(math.random * 1000); // Random backoff to break ties
-   if (not joint(Joint) & not targeted_joint(Joint)) {
+            & jointInArea(Joint, A)
+            & not skip_area(A)
+            & (not lockedArea(A) | my_lock(A)) 
+<- .wait(math.random * 1000); // Random backoff
+   if (not joint(Joint) & not targeted_joint(Joint) & (not lockedArea(A) | my_lock(A))) {
      +my_target(Joint);
      +targeted_joint(Joint);
      .broadcast(tell, targeted_joint(Joint));
      !weldParts;
-   } ...
 ```
 
+If an area lock request is denied, then the welder drops its target and checks other area
+
 ```agentspeak
-+targeted_joint(Joint)[source(Other)]
-   : my_target(Joint) & .my_name(Me)
-     & Me = weldingagent1 & Other = weldingagent2
-<- -my_target(Joint);
++!weldParts : my_target(Joint) & not joint(Joint)
+              & jointInArea(Joint, A)
+              & my_lock(A) & not lockedArea(A)
+<- .print("Welding robot: factory denied lock for area ", A, ". Dropping target.");
+   -my_lock(A);
+   -my_target(Joint);
    -targeted_joint(Joint);
-   !parkArm;
+   .broadcast(untell, targeted_joint(Joint)); 
+   +skip_area(A); // Temporarily ignore this area
    !weldParts.
 ```
 
-#### 2e. Shared-area lock fixes for simultaneous welding (`assemblyareaagent.asl`)
+If a welder is completely blocked from all areas, it abolishes its skip_area memory and tries again after a short wait:
 
-We refactored the are locking logic so that both welders can hold the same area simultaneously, while the robotic arm and moving agent still get exclusive access. The key rule is the following:
++!weldParts : skip_area(_)
+<- .wait(500);
+   .abolish(skip_area(_));
+   !weldParts.
 
-```prolog
-is_welder(weldingagent1).
-is_welder(weldingagent2).
+```agentspeak
 
-can_lock(Ag, Area) :- lockedAreaFor(Ag, Area).              % already holds it
-can_lock(Ag, Area) :- not lockedAreaFor(_, Area).           % empty
-can_lock(Ag, Area) :- is_welder(Ag)                         % welder + all holders are welders
-                    & not (lockedAreaFor(Other, Area)
-                           & not is_welder(Other)).
-```
+#### 2e. Area lock fixes for simultaneous welding
 
-This means that an agent can lock an area if it already holds it, if the area is empty, or if it is a welder and all current holders are welders.
+The welders work in a way that they cannot hold the same area simoultaneously, but they can work in different areas at the same time. Some modifications were made to the `AssemblyAreaAgent`, mostly to improve the performance of the area locking and unlocking. 
 
 #### 2f. `my_lock` area tracking for welders
 
